@@ -62,7 +62,7 @@ var (
 		WHITE:        {255, 255, 255},
 	}
 
-	isShiftBeingHeld bool
+	// isShiftBeingHeld bool
 )
 
 func prepareFont() {
@@ -186,6 +186,10 @@ func ReadKey() string {
 		case *sdl.KeyboardEvent:
 			if t.State == 1 {
 				keyString := sdl.GetScancodeName(t.Keysym.Scancode)
+
+				// for compatibility...
+				keyString = strings.Replace(keyString, "Keypad ", "", -1)
+
 				if (t.Keysym.Mod & sdl.KMOD_SHIFT) != 1 && len(keyString) == 1 {
 					return strings.ToLower(keyString)
 				}
