@@ -120,6 +120,8 @@ func Close_console() { //should be deferred!
 }
 
 func Clear_console() {
+	SetFgColorRGB(255, 255, 255)
+	SetBgColorRGB(0, 0, 0)
 	renderer.Clear()
 }
 

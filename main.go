@@ -1,27 +1,35 @@
 package main
 
 import (
-	"fmt"
-	"time"
 	cw "GoSdlConsole/GoSdlConsole"
+	"fmt"
+	"math/rand"
+	"time"
 )
 
 func main() {
 	cw.Init_console()
 	defer cw.Close_console()
 
-	for i:=0; i < 5000; i++{
-		cw.SetColor(cw.RED, cw.BLACK)
-		cw.SetBgColorRGB(0, 0, 0)
-		cw.PutString("Look, I am", 0, 0)
-		cw.SetFgColorRGB(0, 128, 32)
-		cw.PutString("being rendered by ", 3, 4)
-		cw.PutString("F", 79, 24)
-		cw.SetFgColorRGB(255, 255, 32)
-		cw.SetBgColorRGB(0, 255, 32)
-		cw.PutString("OPENGL", 21, 4)
+	start := time.Now()
+
+	frames := 0
+	for {
+		cw.Clear_console()
+		for x := 0; x < 80; x++ {
+			for y := 0; y < 25; y++ {
+				cw.SetColor(rand.Int() % 16, rand.Int() % 16)
+				cw.PutChar(rune(rand.Int() % 255), x, y)
+			}
+		}
 		cw.Flush_console()
-		fmt.Println(cw.ReadKey())
-		time.Sleep(20 * time.Millisecond)
+		frames++
+		elapsed := time.Since(start)
+		if elapsed >= time.Second {
+			break
+		}
 	}
+	fmt.Printf("FPS: %d", frames)
+	time.Sleep(20000 * time.Millisecond)
+
 }
