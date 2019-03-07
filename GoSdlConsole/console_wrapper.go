@@ -230,8 +230,8 @@ func ReadKeyAsync() string { // also reads mouse events... TODO: think of if sep
 	if len(evCh) == 0 {
 		return "NOTHING"
 	}
-	ev := <-evCh
-	switch ev := ev.(type) {
+	evnt := <-evCh
+	switch ev := evnt.(type) {
 	case *sdl.KeyboardEvent:
 		if ev.State == 1 {
 			keyString := sdl.GetScancodeName(ev.Keysym.Scancode)
@@ -244,7 +244,10 @@ func ReadKeyAsync() string { // also reads mouse events... TODO: think of if sep
 			}
 			return strings.ToUpper(keyString)
 		}
-	// case *sdl.MouseMotionEvent:
+	case *sdl.MouseMotionEvent:
+		mouseMoveWork(ev)
+	case *sdl.MouseButtonEvent:
+		mouseButtonWork(ev)
 
 	}
 	//case *tcell.EventMouse:
@@ -254,6 +257,30 @@ func ReadKeyAsync() string { // also reads mouse events... TODO: think of if sep
 	//	CONSOLE_WIDTH, CONSOLE_HEIGHT = screen.Size()
 	//	wasResized = true
 	return "NON-KEY"
+}
+
+func mouseMoveWork(ev *sdl.MouseMotionEvent) {
+	mx, my := int(ev.X / chrW), int(ev.Y / chrH)
+	if mouseX != mx || mouseY != my {
+		mouseVectorX = mx-mouseX
+		mouseVectorY = my-mouseY
+		mouseX, mouseY = mx, my
+		mouseMoved = true
+	}
+}
+
+func mouseButtonWork(ev *sdl.MouseButtonEvent) {
+	// PrevMouseButton = mouseButton
+	if ev.Type == sdl.MOUSEBUTTONUP{
+		mouseButton = "NONE"
+		return
+	}
+	switch ev.Button {
+	case sdl.BUTTON_LEFT:
+		mouseButton = "LEFT"
+	case sdl.BUTTON_RIGHT:
+		mouseButton = "RIGHT"
+	}
 }
 
 func startAsyncEventListener() {
