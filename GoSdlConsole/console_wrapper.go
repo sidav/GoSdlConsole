@@ -62,6 +62,16 @@ var (
 		WHITE:        {255, 255, 255},
 	}
 
+	wasResized     = false
+	evCh           chan sdl.Event
+	flushesCounter int
+
+	mouseX, mouseY             int
+	mouseVectorX, mouseVectorY int // for getting mouse coords changes
+	mouseButton                string
+	mouseHeld                  bool
+	mouseMoved                 bool
+
 	// isShiftBeingHeld bool
 )
 
@@ -105,6 +115,10 @@ func Init_console() {
 		fmt.Fprintf(os.Stderr, "Failed to create texture: %s\n", err)
 		return
 	}
+
+	evCh = make(chan sdl.Event, 1)
+	go startAsyncEventListener()
+
 	renderer.Clear()
 	renderer.SetDrawColor(0, 0, 0, 255)
 	renderer.FillRect(&sdl.Rect{0, 0, int32(winWidth), int32(winHeight)})
@@ -119,6 +133,10 @@ func Close_console() { //should be deferred!
 	fontImg.Free()
 }
 
+func PurgeConsole() { // compatibility stub
+	return
+}
+
 func Clear_console() {
 	SetFgColorRGB(255, 255, 255)
 	SetBgColorRGB(0, 0, 0)
@@ -131,6 +149,10 @@ func Flush_console() {
 
 func GetConsoleSize() (int, int) {
 	return int(termW), int(termH)
+}
+
+func WasResized() bool { // stub for now
+	return false
 }
 
 func SetFgColorRGB(r, g, b uint8) {
@@ -201,40 +223,61 @@ func ReadKey() string {
 	}
 }
 
-// DEPRECATED CRAP BELOW
+func ReadKeyAsync() string { // also reads mouse events... TODO: think of if separate mouse events reader is needed.
 
-//func OldTestReadKeyDeleteMePlease() string {
-//	break_loop := false
-//	sdl.StartTextInput()
-//	for !break_loop {
-//		event := sdl.WaitEvent() // wait here until an event is in the event queue
-//		switch t := event.(type) {
-//		case *sdl.TextInputEvent:
-//			return string(t.Text[:])
-//		case *sdl.KeyboardEvent:
-//			fmt.Printf("[%d ms] Keyboard\ttype:%d\tsym:%c\tcode:%d\tmodifiers:%d\tstate:%d\trepeat:%d\n",
-//				t.Timestamp, t.Type, sdl.GetScancodeName(t.Keysym.Scancode), t.Keysym.Scancode, t.Keysym.Mod, t.State, t.Repeat)
-//			// return t.Keysym.Sym
-//			break_loop = true
-//		}
-//	}
-//	return "WTF"
-//}
+	mouseHeld = mouseButton != "NONE"
 
-//func workEvents() {
-//	event := sdl.WaitEvent() // wait here until an event is in the event queue
-//	switch t := event.(type) {
-//	case *sdl.MouseMotionEvent:
-//		fmt.Printf("[%d ms] MouseMotion\ttype:%d\tid:%d\tx:%d\ty:%d\txrel:%d\tyrel:%d\n",
-//			t.Timestamp, t.Type, t.Which, t.X, t.Y, t.XRel, t.YRel)
-//	case *sdl.MouseButtonEvent:
-//		fmt.Printf("[%d ms] MouseButton\ttype:%d\tid:%d\tx:%d\ty:%d\tbutton:%d\tstate:%d\n",
-//			t.Timestamp, t.Type, t.Which, t.X, t.Y, t.Button, t.State)
-//	case *sdl.MouseWheelEvent:
-//		fmt.Printf("[%d ms] MouseWheel\ttype:%d\tid:%d\tx:%d\ty:%d\n",
-//			t.Timestamp, t.Type, t.Which, t.X, t.Y)
-//	case *sdl.KeyboardEvent:
-//		fmt.Printf("[%d ms] Keyboard\ttype:%d\tsym:%c\tmodifiers:%d\tstate:%d\trepeat:%d\n",
-//			t.Timestamp, t.Type, t.Keysym.Sym, t.Keysym.Mod, t.State, t.Repeat)
-//	}
-//}
+	if len(evCh) == 0 {
+		return "NOTHING"
+	}
+	ev := <-evCh
+	switch ev := ev.(type) {
+	case *sdl.KeyboardEvent:
+		if ev.State == 1 {
+			keyString := sdl.GetScancodeName(ev.Keysym.Scancode)
+
+			// for compatibility...
+			keyString = strings.Replace(keyString, "Keypad ", "", -1)
+
+			if (ev.Keysym.Mod & sdl.KMOD_SHIFT) != 1 && len(keyString) == 1 {
+				return strings.ToLower(keyString)
+			}
+			return strings.ToUpper(keyString)
+		}
+	// case *sdl.MouseMotionEvent:
+
+	}
+	//case *tcell.EventMouse:
+	//	mouseEventWork(ev)
+	//case *tcell.EventResize:
+	//	screen.Sync()
+	//	CONSOLE_WIDTH, CONSOLE_HEIGHT = screen.Size()
+	//	wasResized = true
+	return "NON-KEY"
+}
+
+func startAsyncEventListener() {
+	for {
+		ev := sdl.WaitEvent()
+		select {
+		case evCh <- ev:
+		default:
+		}
+	}
+}
+
+func GetNumberOfRecentFlushes() int { // may be useful for searching rendering overkills and something
+	t := flushesCounter
+	flushesCounter = 0
+	return t
+}
+
+func PrintCharactersTable() {
+	for x := 0; x < int(termW); x++ {
+		for y := 0; y < int(termH); y++ {
+			PutChar(rune(x+y*int(termW)), x, y)
+		}
+	}
+	Flush_console()
+	ReadKey()
+}
