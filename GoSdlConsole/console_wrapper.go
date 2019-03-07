@@ -283,6 +283,28 @@ func mouseButtonWork(ev *sdl.MouseButtonEvent) {
 	}
 }
 
+func GetMouseCoords() (int, int) {
+	return mouseX, mouseY
+}
+
+func GetMouseButton() string {
+	return mouseButton
+}
+
+func IsMouseHeld() bool {
+	return mouseHeld
+}
+
+func WasMouseMovedSinceLastEvent() bool {
+	t := mouseMoved
+	mouseMoved = false
+	return t
+}
+
+func GetMouseMovementVector() (int, int) {
+	return mouseVectorX, mouseVectorY
+}
+
 func startAsyncEventListener() {
 	for {
 		ev := sdl.WaitEvent()
