@@ -28,17 +28,18 @@ const ( // for the great compatibility with default console color codes
 )
 
 var (
-	winTitle                  = "Go-SDL2 Texture"
-	chrW, chrH          int32 = 10, 16
-	termW, termH        int32 = 80, 25
-	winWidth, winHeight       = termW*chrW, termH*chrH
-	FontPngFileName           = "assets/font_10x16.png"
-	window              *sdl.Window
-	renderer            *sdl.Renderer
-	texture             *sdl.Texture
-	fontImg             *sdl.Surface
-	src, dst            sdl.Rect
-	err                 error
+	winTitle                            = "Go-SDL2 Texture"
+	chrW, chrH                    int32 = 10, 16
+	termW, termH                  int32 = 80, 25
+	CONSOLE_WIDTH, CONSOLE_HEIGHT int   = 80, 25
+	winWidth, winHeight                 = termW*chrW, termH*chrH
+	FontPngFileName                     = "assets/font_10x16.png"
+	window                        *sdl.Window
+	renderer                      *sdl.Renderer
+	texture                       *sdl.Texture
+	fontImg                       *sdl.Surface
+	src, dst                      sdl.Rect
+	err                           error
 
 	fgColor = []uint8{255, 255, 255}
 	bgColor = []uint8{0, 0, 0}
@@ -152,7 +153,7 @@ func GetConsoleSize() (int, int) {
 }
 
 func WasResized() bool { // stub for now
-	return false
+	return wasResized
 }
 
 func SetFgColorRGB(r, g, b uint8) {
@@ -254,10 +255,13 @@ func ReadKeyAsync() string { // also reads mouse events... TODO: think of if sep
 	return "NON-KEY"
 }
 
-func windowResizeWork(ev *sdl.WindowEvent) {
-	if ev.Type == sdl.WINDOWEVENT_SIZE_CHANGED || ev.Type == sdl.WINDOWEVENT_RESIZED {
-		termW, termH = ev.Data1, ev.Data2
-		winWidth, winHeight = termW*chrW, termH*chrH
+func windowResizeWork(wEvent *sdl.WindowEvent) {
+	evnt := wEvent.Event
+	if evnt == sdl.WINDOWEVENT_RESIZED {
+		winWidth, winHeight = wEvent.Data1, wEvent.Data2
+		termW, termH = winWidth/chrW, winHeight/chrH
+		CONSOLE_WIDTH, CONSOLE_HEIGHT = int(termW), int(termH)
+		wasResized = true
 	}
 }
 
