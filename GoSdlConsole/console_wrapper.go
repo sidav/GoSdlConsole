@@ -96,6 +96,7 @@ func Init_console() {
 		fmt.Fprintf(os.Stderr, "Failed to create window: %s\n", err)
 		return
 	}
+	window.SetResizable(true)
 
 	renderer, err = sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
 	if err != nil {
@@ -248,15 +249,18 @@ func ReadKeyAsync() string { // also reads mouse events... TODO: think of if sep
 		mouseMoveWork(ev)
 	case *sdl.MouseButtonEvent:
 		mouseButtonWork(ev)
-
+	case *sdl.WindowEvent:
+		windowResizeWork(ev)
 	}
-	//case *tcell.EventMouse:
-	//	mouseEventWork(ev)
-	//case *tcell.EventResize:
-	//	screen.Sync()
-	//	CONSOLE_WIDTH, CONSOLE_HEIGHT = screen.Size()
-	//	wasResized = true
 	return "NON-KEY"
+}
+
+func windowResizeWork(ev *sdl.WindowEvent) {
+	if ev.Type == sdl.WINDOWEVENT_SIZE_CHANGED || ev.Type == sdl.WINDOWEVENT_RESIZED {
+	}
+	//switch ev := ev.GetType() {
+	//case
+	//}
 }
 
 func mouseMoveWork(ev *sdl.MouseMotionEvent) {
