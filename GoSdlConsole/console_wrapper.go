@@ -6,6 +6,7 @@ import (
 	"github.com/veandco/go-sdl2/sdl"
 	"os"
 	"strings"
+	"time"
 )
 
 const ( // for the great compatibility with default console color codes
@@ -206,7 +207,10 @@ func PutString(s string, x, y int) {
 
 func ReadKey() string {
 	for {
-		event := sdl.WaitEvent() // wait here until an event is in the event queue
+		for len(evCh) == 0 { // wait here until an event is in the event queue
+			time.Sleep(10 * time.Millisecond)
+		}
+		event := <-evCh
 		switch t := event.(type) {
 		case *sdl.KeyboardEvent:
 			if t.State == 1 {
