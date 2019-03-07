@@ -91,12 +91,11 @@ func prepareFont() {
 func Init_console() {
 
 	window, err = sdl.CreateWindow(winTitle, sdl.WINDOWPOS_UNDEFINED, sdl.WINDOWPOS_UNDEFINED,
-		winWidth, winHeight, sdl.WINDOW_SHOWN)
+		winWidth, winHeight, sdl.WINDOW_SHOWN+sdl.WINDOW_RESIZABLE)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to create window: %s\n", err)
 		return
 	}
-	window.SetResizable(true)
 
 	renderer, err = sdl.CreateRenderer(window, -1, sdl.RENDERER_ACCELERATED)
 	if err != nil {
@@ -215,7 +214,7 @@ func ReadKey() string {
 				// for compatibility...
 				keyString = strings.Replace(keyString, "Keypad ", "", -1)
 
-				if (t.Keysym.Mod & sdl.KMOD_SHIFT) != 1 && len(keyString) == 1 {
+				if (t.Keysym.Mod&sdl.KMOD_SHIFT) != 1 && len(keyString) == 1 {
 					return strings.ToLower(keyString)
 				}
 				return strings.ToUpper(keyString)
@@ -240,7 +239,7 @@ func ReadKeyAsync() string { // also reads mouse events... TODO: think of if sep
 			// for compatibility...
 			keyString = strings.Replace(keyString, "Keypad ", "", -1)
 
-			if (ev.Keysym.Mod & sdl.KMOD_SHIFT) != 1 && len(keyString) == 1 {
+			if (ev.Keysym.Mod&sdl.KMOD_SHIFT) != 1 && len(keyString) == 1 {
 				return strings.ToLower(keyString)
 			}
 			return strings.ToUpper(keyString)
@@ -257,17 +256,16 @@ func ReadKeyAsync() string { // also reads mouse events... TODO: think of if sep
 
 func windowResizeWork(ev *sdl.WindowEvent) {
 	if ev.Type == sdl.WINDOWEVENT_SIZE_CHANGED || ev.Type == sdl.WINDOWEVENT_RESIZED {
+		termW, termH = ev.Data1, ev.Data2
+		winWidth, winHeight = termW*chrW, termH*chrH
 	}
-	//switch ev := ev.GetType() {
-	//case
-	//}
 }
 
 func mouseMoveWork(ev *sdl.MouseMotionEvent) {
-	mx, my := int(ev.X / chrW), int(ev.Y / chrH)
+	mx, my := int(ev.X/chrW), int(ev.Y/chrH)
 	if mouseX != mx || mouseY != my {
-		mouseVectorX = mx-mouseX
-		mouseVectorY = my-mouseY
+		mouseVectorX = mx - mouseX
+		mouseVectorY = my - mouseY
 		mouseX, mouseY = mx, my
 		mouseMoved = true
 	}
@@ -275,7 +273,7 @@ func mouseMoveWork(ev *sdl.MouseMotionEvent) {
 
 func mouseButtonWork(ev *sdl.MouseButtonEvent) {
 	// PrevMouseButton = mouseButton
-	if ev.Type == sdl.MOUSEBUTTONUP{
+	if ev.Type == sdl.MOUSEBUTTONUP {
 		mouseButton = "NONE"
 		return
 	}
